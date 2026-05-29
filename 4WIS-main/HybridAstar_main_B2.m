@@ -580,6 +580,58 @@ ylabel('Steering angle (deg)');
 legend([p1 p2 p3 p4], {'\delta_{fl} (act)','\delta_{fr} (act)','\delta_{rl} (act)','\delta_{rr} (act)'}, 'Location', 'best');
 title(sprintf('4-wheel steering angles (Solution B2: Cubic Spline Transitions), rate limited: %.0f deg/s, filter tau=%.3f s', deltaRateMax_deg_s, tau_steering_filter));
 
+% ================== Figure 3: Speed vs Arc Length (路程-速度图) ==================
+figure(3);
+clf;
+hax3 = gca;
+hold(hax3, 'on');
+
+% background shading: draw patches first (same mode segmentation)
+for k = 1:numel(segStartIdx)
+    i1 = segStartIdx(k);
+    i2 = segEndIdx(k);
+    m  = segModes(k);
+
+    if isKey(modeColors, m)
+        c = modeColors(m);
+    else
+        c = [0 0 0];
+    end
+
+    s1 = s_all(i1);
+    s2 = s_all(i2);
+
+    % placeholder y-limits; will be updated after plotting lines
+    patch(hax3, [s1 s2 s2 s1], [-5 -5 30 30], c, 'FaceAlpha', modeAlpha, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+end
+
+% 绘制速度曲线 (单位：km/h)
+v_profile_kmh = v_profile * 3.6;  % 转换为 km/h
+p_speed = plot(s_all, v_profile_kmh, 'LineWidth', 2.5, 'Color', [0.1 0.4 0.8], 'DisplayName', 'Speed profile');
+
+% 添加网格和标签
+grid on;
+xlabel('Arc length s (m)', 'FontSize', 11);
+ylabel('Speed v (km/h)', 'FontSize', 11);
+title('Speed Profile along the Path (Solution B2)', 'FontSize', 12, 'FontWeight', 'bold');
+
+% 设置y轴范围
+ylim([0, max(v_profile_kmh)*1.1]);
+
+% 添加图例
+legend(p_speed, 'Location', 'best', 'FontSize', 10);
+
+% 添加一些统计信息到图上
+textStr = sprintf('Total distance: %.2f m\nMax speed: %.2f km/h\nMin speed: %.2f km/h\nAvg speed: %.2f km/h', ...
+    s_all(end), max(v_profile_kmh), min(v_profile_kmh), mean(v_profile_kmh));
+annotation('textbox', [0.65 0.65 0.3 0.25], 'String', textStr, 'FontSize', 9, 'BackgroundColor', 'white', 'EdgeColor', 'black');
+
+fprintf('\n================== Speed Profile Statistics ==================\n');
+fprintf('Total travel distance: %.2f m\n', s_all(end));
+fprintf('Maximum speed: %.2f km/h (%.2f m/s)\n', max(v_profile_kmh), max(v_profile));
+fprintf('Minimum speed: %.2f km/h (%.2f m/s)\n', min(v_profile_kmh), min(v_profile));
+fprintf('Average speed: %.2f km/h (%.2f m/s)\n', mean(v_profile_kmh), mean(v_profile));
+fprintf('============================================================\n\n');
 
 % ================== Animate ==================
 size_car=[3 1.8 1.4];
